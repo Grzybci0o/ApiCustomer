@@ -19,7 +19,7 @@ public class ApiCustomerService {
             ErrorResponse errorResponse = new ErrorResponse();
             errorResponse.setStatus(HttpStatus.NOT_ACCEPTABLE.value());
             errorResponse.setMessage("The requested response format is not supported. Please use Accept: application/json!");
-            return new ResponseEntity<>(errorResponse, HttpStatus.NOT_ACCEPTABLE);
+            return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
         if (!userGitHubRepository.userExists(username)) {
