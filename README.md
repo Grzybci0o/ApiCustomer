@@ -10,12 +10,12 @@ This application consumes the GitHub API to retrieve a user's repositories that 
 
 ## Getting Started
 
-1. Clone the repository: `git clone https://github.com/your-username/your-repo.git`
-2. Navigate to the project directory: `cd your-repo`
+1. Clone the repository: `git clone https://github.com/Grzybci0o/ApiCustomer`
+2. Navigate to the project directory: `cd \apicustomer\apicustomer`
 3. Build the application: `mvn clean install`
-4. Run the application: `java -jar target/your-app.jar`
-5. Access the application in your browser at: `http://localhost:8080`
-
+4. Run the application: `java -jar .\target\apicustomer-0.0.1-SNAPSHOT.jar`
+5. Access the application in your browser at: `http://localhost:8080/api/repositories/{username}`
+6. You can acces the application via Postman at: `http://localhost:8080/api/repositories/{username}`
 ## API Endpoints
 
 ### Get User's GitHub Repositories
