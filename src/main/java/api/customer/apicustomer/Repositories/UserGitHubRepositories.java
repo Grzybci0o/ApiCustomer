@@ -1,12 +1,10 @@
 package api.customer.apicustomer.Repositories;
 
-import api.customer.apicustomer.Error.ErrorResponse;
+import api.customer.apicustomer.Exception.RetriveRepositoriesException;
 import api.customer.apicustomer.Models.BranchInfo;
 import api.customer.apicustomer.Models.GitHubBranch;
 import api.customer.apicustomer.Models.GitHubRepository;
 import api.customer.apicustomer.Models.RepositoryInfo;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Repository;
 import org.springframework.web.client.RestTemplate;
 
@@ -23,14 +21,18 @@ public class UserGitHubRepositories implements UserGitHubRepository {
     private static final String USER_REPOS_URL = "https://api.github.com/users/";
     private static final String REPOS_URL = "https://api.github.com/repos/";
 
-    @Override
-    public ResponseEntity<Object> getReposInfo(String username) {
-        String url = USER_REPOS_URL + username + "/repos";
-        RestTemplate restTemplate = new RestTemplate();
-        ResponseEntity<GitHubRepository[]> response = restTemplate.getForEntity(url, GitHubRepository[].class);
-        GitHubRepository[] repositories = response.getBody();
+    private final RestTemplate restTemplate;
 
-        if (response.getStatusCode().is2xxSuccessful() && repositories != null) {
+    public UserGitHubRepositories(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+    }
+
+    @Override
+    public List<RepositoryInfo> getReposInfo(String username) {
+        String url = USER_REPOS_URL + username + "/repos";
+        GitHubRepository[] repositories = restTemplate.getForObject(url, GitHubRepository[].class);
+
+        if (repositories != null) {
             List<RepositoryInfo> repositoryInfos = new ArrayList<>();
             for (GitHubRepository repository : repositories) {
                 if (!repository.isFork()) {
@@ -38,12 +40,9 @@ public class UserGitHubRepositories implements UserGitHubRepository {
                     repositoryInfos.add(new RepositoryInfo(repository.getName(), repository.getOwner().getLogin(), branchInfos));
                 }
             }
-            return ResponseEntity.ok(repositoryInfos);
+            return repositoryInfos;
         } else {
-            ErrorResponse errorResponse = new ErrorResponse();
-            errorResponse.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
-            errorResponse.setMessage("An error occurred while retrieving the repositories.");
-            return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+            throw new RetriveRepositoriesException("An error occurred while retrieving the repositories.");
         }
     }
 
@@ -64,12 +63,10 @@ public class UserGitHubRepositories implements UserGitHubRepository {
 
     private List<BranchInfo> getBranches(String owner, String repository) {
         String url = REPOS_URL + owner + "/" + repository + "/branches";
-        RestTemplate restTemplate = new RestTemplate();
-        ResponseEntity<GitHubBranch[]> response = restTemplate.getForEntity(url, GitHubBranch[].class);
-        GitHubBranch[] branches = response.getBody();
+        GitHubBranch[] branches = restTemplate.getForObject(url, GitHubBranch[].class);
 
         List<BranchInfo> branchInfos = new ArrayList<>();
-        if (response.getStatusCode().is2xxSuccessful() && branches != null) {
+        if (branches != null) {
             for (GitHubBranch branch : branches) {
                 String commitSha = getLastCommitSha(owner, repository, branch.getName());
                 branchInfos.add(new BranchInfo(branch.getName(), commitSha));
@@ -80,11 +77,9 @@ public class UserGitHubRepositories implements UserGitHubRepository {
 
     private String getLastCommitSha(String owner, String repository, String branch) {
         String url = REPOS_URL + owner + "/" + repository + "/branches/" + branch;
-        RestTemplate restTemplate = new RestTemplate();
-        ResponseEntity<GitHubBranch> response = restTemplate.getForEntity(url, GitHubBranch.class);
-        GitHubBranch branchData = response.getBody();
+        GitHubBranch branchData = restTemplate.getForObject(url, GitHubBranch.class);
 
-        if (response.getStatusCode().is2xxSuccessful() && branchData != null && branchData.getCommit() != null) {
+        if (branchData != null && branchData.getCommit() != null) {
             return branchData.getCommit().getSha();
         }
         return null;

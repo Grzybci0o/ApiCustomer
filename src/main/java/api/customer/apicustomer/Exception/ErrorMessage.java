@@ -1,6 +1,6 @@
-package api.customer.apicustomer.Error;
+package api.customer.apicustomer.Exception;
 
-public class ErrorResponse {
+public class ErrorMessage {
     int status;
     String message;
 

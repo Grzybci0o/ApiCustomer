@@ -1,33 +1,33 @@
 package api.customer.apicustomer.Services;
 
-import api.customer.apicustomer.Error.ErrorResponse;
+import api.customer.apicustomer.Exception.InvalidHeaderException;
+import api.customer.apicustomer.Exception.UserNotFoundException;
+import api.customer.apicustomer.Models.RepositoryInfo;
 import api.customer.apicustomer.Repositories.UserGitHubRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class ApiCustomerService {
 
-    @Autowired
-    private UserGitHubRepository userGitHubRepository;
+    private final UserGitHubRepository userGitHubRepository;
 
-    public ResponseEntity<Object> getUserGitHubRepositories(String username, String acceptHeader) {
+    public ApiCustomerService(UserGitHubRepository userGitHubRepository) {
+        this.userGitHubRepository = userGitHubRepository;
+    }
+
+    public List<RepositoryInfo> getUserGitHubRepositories(String username, String acceptHeader) {
         if (!acceptHeader.equalsIgnoreCase(MediaType.APPLICATION_JSON_VALUE)) {
-            ErrorResponse errorResponse = new ErrorResponse();
-            errorResponse.setStatus(HttpStatus.NOT_ACCEPTABLE.value());
-            errorResponse.setMessage("The requested response format is not supported. Please use Accept: application/json!");
-            return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+            throw new InvalidHeaderException("The requested response format is not supported. Please use Accept: application/json!");
         }
 
         if (!userGitHubRepository.userExists(username)) {
-            ErrorResponse errorResponse = new ErrorResponse();
-            errorResponse.setStatus(HttpStatus.NOT_FOUND.value());
-            errorResponse.setMessage("GitHub user not found!");
-            return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+            throw new UserNotFoundException("GitHub user not found!");
         }
+
         return userGitHubRepository.getReposInfo(username);
     }
 }
+
